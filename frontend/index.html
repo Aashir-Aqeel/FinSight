@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinSight – Smart Finance Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="FS-favicon.png" type="image/x-icon" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar gradient-bg">
+    <h1 class="logo">FinSight</h1>
+    <div class="nav-links">
+      <a href="add_expense.html"><i class="fa-solid fa-circle-plus"></i> Add Expense</a>
+      <a href="view_expense.html"><i class="fa-solid fa-receipt"></i> View Expenses</a>
+      <a href="add_income.html"><i class="fa-solid fa-sack-dollar"></i> Add Income</a>
+      <a href="view_income.html"><i class="fa-solid fa-wallet"></i> View Income</a>
+      <a href="dashboard.html"><i class="fa-solid fa-chart-column"></i> Analytics</a>
+      <a href="#" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container">
+    <h2>Welcome to <span class="brand-name">FinSight</span></h2>
+    <p class="text">
+      Gain insights into your spending and income patterns. Track, analyze, and manage your finances smarter.
+    </p>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="card income">
+        <h3>Total Income</h3>
+        <p id="totalIncome">₨ 0</p>
+      </div>
+      <div class="card expense">
+        <h3>Total Expense</h3>
+        <p id="totalExpense">₨ 0</p>
+      </div>
+      <div class="card balance">
+        <h3>Remaining Balance</h3>
+        <p id="remainingBalance">₨ 0</p>
+      </div>
+    </div>
+
+    <!-- Financial Overview Chart -->
+    <section class="dashboard-section">
+      <h3>Financial Overview</h3>
+      <canvas id="financeChart" height="120"></canvas>
+    </section>
+
+    <!-- Expense Management -->
+    <div class="dashboard-section">
+      <h3>Expense Management</h3>
+      <div class="dashboard-buttons">
+        <button class="dashboard-btn" onclick="window.location.href='add_expense.html'">➕ Add New Expense</button>
+        <button class="dashboard-btn" onclick="window.location.href='view_expense.html'">📊 View All Expenses</button>
+      </div>
+    </div>
+
+    <!-- Income Management -->
+    <div class="dashboard-section">
+      <h3>Income Management</h3>
+      <div class="dashboard-buttons">
+        <button class="dashboard-btn" onclick="window.location.href='add_income.html'">💰 Add New Income</button>
+        <button class="dashboard-btn" onclick="window.location.href='view_income.html'">📈 View All Income</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const BASE_URL = "http://127.0.0.1:8000";
+
+    // JWT Authentication
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    // Logout button
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    });
+
+    async function loadSummary() {
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [expenseRes, incomeRes] = await Promise.all([
+          axios.get(`${BASE_URL}/expense/summary`, { headers }),
+          axios.get(`${BASE_URL}/income/summary`, { headers }),
+        ]);
+
+        const totalExpense = expenseRes.data.total_expense || 0;
+        const totalIncome = incomeRes.data.total_income || 0;
+        const balance = totalIncome - totalExpense;
+
+        document.getElementById("totalExpense").textContent = `₨ ${totalExpense.toLocaleString()}`;
+        document.getElementById("totalIncome").textContent = `₨ ${totalIncome.toLocaleString()}`;
+        document.getElementById("remainingBalance").textContent = `₨ ${balance.toLocaleString()}`;
+
+        // Render Chart.js Overview
+        const ctx = document.getElementById("financeChart").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Income", "Expenses", "Balance"],
+            datasets: [{
+              label: "Financial Summary",
+              data: [totalIncome, totalExpense, balance],
+              backgroundColor: [
+                "rgba(34,197,94,0.85)",
+                "rgba(239,68,68,0.85)",
+                "rgba(59,130,246,0.85)",
+              ],
+              borderRadius: 8,
+            }],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { color: "#555" } },
+              x: { ticks: { color: "#555" } },
+            },
+          },
+        });
+      } catch (error) {
+        console.error("Error fetching summary:", error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "login.html";
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadSummary);
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <h3>💼 FinSight</h3>
+        <p>Your intelligent personal finance tracker.</p>
+      </div>
+      <div class="footer-links">
+        <a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+        <a href="view_income.html"><i class="fa-solid fa-wallet"></i> Income</a>
+        <a href="view_expense.html"><i class="fa-solid fa-receipt"></i> Expenses</a>
+        <a href="ai_assistant.html"><i class="fa-solid fa-robot"></i> FinSight AI</a>
+      </div>
+      <div class="footer-right">
+        <p>© <span id="year"></span> FinSight. All rights reserved.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fa-brands fa-github"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

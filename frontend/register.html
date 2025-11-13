@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinSight - Register</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="FS-favicon.png" type="image/x-icon" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <div class="navbar gradient-bg">
+    <h1>FinSight - Register</h1>
+    <div class="nav-links">
+      <a href="login.html"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+    </div>
+  </div>
+
+  <!-- Registration Form -->
+  <div class="container">
+    <div class="form-card">
+      <h2>Create Your FinSight Account</h2>
+      <form id="registerForm">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Enter your email" required />
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required />
+        <button type="submit" class="dashboard-btn">Register</button>
+      </form>
+      <p class="form-footer">
+        Already have an account? <a href="login.html">Login here</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "http://127.0.0.1:8000";
+
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        alert("❌ Please fill in all fields.");
+        return;
+      }
+
+      try {
+        const res = await axios.post(`${BASE_URL}/auth/register`, { email, password });
+        alert(res.data.message || "✅ Registered successfully! Please login.");
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error("Registration error:", err.response || err);
+        alert(err.response?.data?.detail || "❌ Registration failed. Try another email.");
+      }
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <h3>💼 FinSight</h3>
+        <p>Your intelligent personal finance tracker.</p>
+      </div>
+      <div class="footer-links">
+        <a href="login.html"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+      </div>
+      <div class="footer-right">
+        <p>© <span id="year"></span> FinSight. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

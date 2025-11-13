@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinSight AI Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="FS-favicon.png" type="image/x-icon" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar gradient-bg">
+    <h1>FinSight AI Assistant</h1>
+    <div class="nav-links">
+      <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="view_income.html"><i class="fa-solid fa-wallet"></i> Income</a>
+      <a href="view_expense.html"><i class="fa-solid fa-receipt"></i> Expenses</a>
+      <a href="#" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+  </nav>
+
+  <!-- Chat Container -->
+  <div class="container">
+    <div id="chatBox" class="chat-box"></div>
+    <form id="aiForm" class="chat-form">
+      <input type="text" id="prompt" placeholder="Ask me anything about your finances..." required />
+      <button type="submit" id="sendBtn"><i class="fa-solid fa-paper-plane"></i> Send</button>
+    </form>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const BASE_URL = "http://127.0.0.1:8000";
+    const token = localStorage.getItem("token");
+    const chatBox = document.getElementById("chatBox");
+    const aiForm = document.getElementById("aiForm");
+    const promptInput = document.getElementById("prompt");
+
+    // JWT Authentication
+    if (!token) {
+      alert("❌ You are not logged in! Redirecting to login page.");
+      window.location.href = "login.html";
+    }
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    });
+
+    // Append message to chat box
+    function appendMessage(text, sender) {
+      const div = document.createElement("div");
+      div.classList.add("message", sender);
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Handle AI query submission
+    aiForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userMessage = promptInput.value.trim();
+      if (!userMessage) return;
+
+      appendMessage(userMessage, "user");
+      promptInput.value = "";
+
+      try {
+        const res = await axios.post(
+          `${BASE_URL}/ai/query`,
+          { prompt: userMessage },
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+        appendMessage(res.data.response || "❌ No response received.", "bot");
+      } catch (err) {
+        console.error("AI query error:", err.response || err);
+        appendMessage("❌ Failed to get response from AI.", "bot");
+        if (err.response && err.response.status === 401) {
+          alert("❌ Session expired. Please login again.");
+          localStorage.removeItem("token");
+          window.location.href = "login.html";
+        }
+      }
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <h3>💼 FinSight</h3>
+        <p>Your intelligent personal finance tracker.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+        <a href="view_income.html"><i class="fa-solid fa-wallet"></i> Income</a>
+        <a href="view_expense.html"><i class="fa-solid fa-receipt"></i> Expenses</a>
+        <a href="ai_assistant.html"><i class="fa-solid fa-robot"></i> FinSight AI</a>
+      </div>
+      <div class="footer-right">
+        <p>© <span id="year"></span> FinSight. All rights reserved.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fa-brands fa-github"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

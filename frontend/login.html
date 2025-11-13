@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinSight - Login</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="FS-favicon.png" type="image/x-icon" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <div class="navbar gradient-bg">
+    <h1>FinSight - Login</h1>
+    <div class="nav-links">
+      <a href="register.html"><i class="fa-solid fa-user-plus"></i> Register</a>
+    </div>
+  </div>
+
+  <!-- Login Form -->
+  <div class="container">
+    <div class="form-card">
+      <h2>🔑 Login to Your Account</h2>
+      <form id="loginForm">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required />
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required />
+        <button type="submit" class="dashboard-btn">Login</button>
+      </form>
+      <p class="form-footer">
+        Don't have an account? <a href="register.html">Register here</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "http://127.0.0.1:8000";
+
+    // Redirect to dashboard if already logged in
+    const existingToken = localStorage.getItem("token");
+    if (existingToken) {
+      window.location.href = "index.html";
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        alert("❌ Please fill in both email and password.");
+        return;
+      }
+
+      try {
+        const res = await axios.post(`${BASE_URL}/auth/login`, { email, password });
+        localStorage.setItem("token", res.data.access_token); // Store JWT token
+        alert("✅ Login successful!");
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error("Login error:", err.response || err);
+        if (err.response && err.response.status === 401) {
+          alert("❌ Invalid credentials!");
+        } else {
+          alert("❌ Failed to login. Please try again.");
+        }
+      }
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <h3>💼 FinSight</h3>
+        <p>Your intelligent personal finance tracker.</p>
+      </div>
+      <div class="footer-links">
+        <a href="register.html"><i class="fa-solid fa-user-plus"></i> Register</a>
+      </div>
+      <div class="footer-right">
+        <p>© <span id="year"></span> FinSight. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

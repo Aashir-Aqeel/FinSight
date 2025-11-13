@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinSight - Add Expense</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="FS-favicon.png" type="image/x-icon" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar gradient-bg">
+    <h1>FinSight - Add Expense</h1>
+    <div class="nav-links">
+      <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="add_income.html"><i class="fa-solid fa-circle-plus"></i> Add Income</a>
+      <a href="view_expense.html"><i class="fa-solid fa-wallet"></i> View Expenses</a>
+      <a href="#" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container">
+    <h2>💸 Record a New Expense</h2>
+    <form id="expenseForm">
+      <label>Title</label>
+      <input type="text" id="title" placeholder="e.g., Groceries" required />
+
+      <label>Amount</label>
+      <input type="number" id="amount" placeholder="e.g., 2500" required />
+
+      <label>Category</label>
+      <select id="category" required>
+        <option value="">Select Category</option>
+        <option>Food</option>
+        <option>Transport</option>
+        <option>Utilities</option>
+        <option>Shopping</option>
+        <option>Others</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" id="date" required />
+
+      <button type="submit" class="dashboard-btn">➕ Add Expense</button>
+    </form>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const BASE_URL = "http://127.0.0.1:8000";
+
+    // JWT Authentication check
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    });
+
+    // Submit Expense
+    document.getElementById("expenseForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        title: document.getElementById("title").value,
+        amount: parseFloat(document.getElementById("amount").value),
+        category: document.getElementById("category").value,
+        date: document.getElementById("date").value,
+      };
+
+      try {
+        const res = await axios.post(`${BASE_URL}/expense/`, data, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        alert("✅ " + (res.data.message || "Expense added successfully!"));
+        document.getElementById("expenseForm").reset();
+      } catch (err) {
+        console.error(err);
+        if (err.response && err.response.status === 401) {
+          alert("❌ Session expired. Please login again.");
+          localStorage.removeItem("token");
+          window.location.href = "login.html";
+        } else {
+          alert("❌ Error adding expense. Check console for details.");
+        }
+      }
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <h3>💼 FinSight</h3>
+        <p>Your intelligent personal finance tracker.</p>
+      </div>
+      <div class="footer-links">
+        <a href="view_income.html"><i class="fa-solid fa-wallet"></i> Income</a>
+        <a href="view_expense.html"><i class="fa-solid fa-receipt"></i> Expenses</a>
+        <a href="ai_assistant.html"><i class="fa-solid fa-robot"></i> FinSight AI</a>
+      </div>
+      <div class="footer-right">
+        <p>© <span id="year"></span> FinSight. All rights reserved.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fa-brands fa-github"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
